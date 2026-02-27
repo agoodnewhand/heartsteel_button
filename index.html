@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <!-- maximum-scale=1 可抑制双击放大，但会影响可缩放性；你不想要缩放就留着 -->
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover" />
+  <title>随机音效按钮</title>
+  <style>
+    html, body { height: 100%; margin: 0; }
+    body {
+      font-family: system-ui;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    button {
+      font-size: 28px;
+      padding: 18px 28px;
+      cursor: pointer;
+
+      border: 0;
+      border-radius: 16px;
+
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    button:active { transform: scale(0.98); }
+  </style>
+</head>
+<body>
+  <button id="btn" type="button">钢</button>
+
+  <script>
+    // 建议用 mp3/m4a（尤其 iPhone/微信里 ogg 很容易不稳）
+    const files = [
+      "Heartsteel_trigger_SFX.mp3",
+      "Heartsteel_trigger_SFX_2.mp3",
+      "Heartsteel_trigger_SFX_3.mp3",
+    ];
+
+    // 每个音效准备多个 Audio 实例，避免连点把正在播的那次“掐断”
+    const CHANNELS_PER_FILE = 4;
+    const pools = files.map(src =>
+      Array.from({ length: CHANNELS_PER_FILE }, () => {
+        const a = new Audio(src);
+        a.preload = "auto";
+        a.playsInline = true;
+        return a;
+      })
+    );
+    const poolPtr = pools.map(() => 0);
+
+    function pickIndex() {
+      return (Math.random() * pools.length) | 0;
+    }
+
+    function playFromPool(i) {
+      const arr = pools[i];
+      const k = poolPtr[i];
+      poolPtr[i] = (k + 1) % arr.length;
+
+      const a = arr[k];
+      try { a.currentTime = 0; } catch (_) {}
+      const p = a.play();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    }
+
+    const btn = document.getElementById("btn");
+
+    // 用 pointerdown 提升“触感”（更快响应），并阻止双击缩放类手势
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      playFromPool(pickIndex());
+    }, { passive: false });
+
+    // 防止某些浏览器同时触发 click 造成重复播放
+    btn.addEventListener("click", (e) => e.preventDefault());
+  </script>
+</body>
+</html>
