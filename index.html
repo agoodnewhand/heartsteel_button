@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>随机音效按钮</title>
+  <style>
+    body { font-family: system-ui; display:flex; height:100vh; align-items:center; justify-content:center; }
+    button { font-size: 28px; padding: 18px 28px; cursor:pointer; }
+  </style>
+</head>
+<body>
+  <button id="btn">随机触发</button>
+
+  <script>
+    const files = ["Heartsteel_trigger_SFX.ogg", "Heartsteel_trigger_SFX_2.ogg", "Heartsteel_trigger_SFX_3.ogg"];
+    const audios = files.map(f => {
+      const a = new Audio(f);
+      a.preload = "auto";
+      return a;
+    });
+
+    function pickIndex() {
+      // 纯随机：允许连续两次一样
+      return Math.floor(Math.random() * audios.length);
+    }
+
+    document.getElementById("btn").addEventListener("click", async () => {
+      const a = audios[pickIndex()];
+      a.currentTime = 0;        // 允许连点从头播放
+      try { await a.play(); } catch (e) { console.log(e); }
+    });
+  </script>
+</body>
+</html>
